@@ -27,6 +27,7 @@ By the way, did you notice how I avoided currency rounding issuesby using an int
 ``` python
 >>> apply_discount(shoes,0.25)
 11175
+```
 Alright, this worked nicely. Now, let’s try to apply some invalid dis-counts. For example, a 200% “discount” that would lead to us givingmoney to the customer:
 ``` python
 >>> apply_discount(shoes,2.0)
