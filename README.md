@@ -83,7 +83,7 @@
 
 ## بخش های ترجمه شده
 
-* [0_مقدمه](1_introduction(completed)/introduction.md)
+* [1_مقدمه](1_introduction(completed)/introduction.md)
 
   
 ## دریافت کتاب
