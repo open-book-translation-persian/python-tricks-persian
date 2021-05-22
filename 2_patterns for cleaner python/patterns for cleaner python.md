@@ -358,8 +358,229 @@ right?
 
 <h5 dir='rt1'>Key Takeaways</h5>
 
-    • Smart formatting and comma placement can make your list,
-    dict, or set constants easier to maintain.
+   • Smart formatting and comma placement can make your list,
+   dict, or set constants easier to maintain.
 
-    • Python’s string literal concatenation feature can work to your
-    benefit, or introduce hard-to-catch bugs.
+   • Python’s string literal concatenation feature can work to your
+   benefit, or introduce hard-to-catch bugs.
+
+
+<h3 dir='rt1'>2.3 Context Managers and the with Statement</h3>
+
+The with statement in Python is regarded as an obscure feature by
+some. But when you peek behind the scenes, you’ll see that there’s no
+magic involved, and it’s actually a highly useful feature that can help
+you write cleaner and more readable Python code.
+So what’s the with statement good for? It helps simplify some common resource management patterns by abstracting their functionality
+and allowing them to be factored out and reused.
+A good way to see this feature used effectively is by looking at examples in the Python standard library. The built-in open() function provides us with an excellent use case:
+
+``` python
+with open('hello.txt', 'w') as f:
+    f.write('hello, world!')
+```
+
+Opening files using the with statement is generally recommended because it ensures that open file descriptors are closed automatically after program execution leaves the context of the with statement. Internally, the above code sample translates to something like this:
+
+``` python
+f = open('hello.txt', 'w')
+try:
+    f.write('hello, world')
+finally:
+    f.close()
+```
+
+You can already tell that this is quite a bit more verbose. Note that
+the try...finally statement is significant. It wouldn’t be enough to
+just write something like this:
+
+```python
+f = open('hello.txt', 'w')
+f.write('hello, world')
+f.close()
+```
+
+This implementation won’t guarantee the file is closed if there’s an exception during the f.write() call—and therefore our program might
+leak a file descriptor. That’s why the with statement is so useful. It
+makes properly acquiring and releasing resources a breeze.
+Another good example where the with statement is used effectively in
+the Python standard library is the threading.Lock class:
+
+``` python
+some_lock = threading.Lock()
+
+
+# Harmful:
+some_lock.acquire()
+try:
+    # Do something...
+finally:
+    some_lock.release()
+    
+# Better:
+with some_lock:
+    # Do something...
+```
+
+In both cases, using a with statement allows you to abstract away most
+of the resource handling logic. Instead of having to write an explicit
+try...finally statement each time, using the with statement takes
+care of that for us.
+The with statement can make code that deals with system resources
+more readable. It also helps you avoid bugs or leaks by making it practically impossible to forget to clean up or release a resource when it’s
+no longer needed.
+
+<h5 dir='rt1'>Supporting with in Your Own Objects</h5>
+
+Now, there’s nothing special or magical about the open() function or
+the threading.Lock class and the fact that they can be used with a
+with statement. You can provide the same functionality in your own
+classes and functions by implementing so-called context managers.6
+What’s a context manager? It’s a simple “protocol” (or interface) that
+your object needs to follow in order to support the with statement.
+Basically, all you need to do is add __enter__ and __exit__ methods
+to an object if you want it to function as a context manager. Python
+will call these two methods at the appropriate times in the resource
+management cycle.
+Let’s take a look at what this would look like in practical terms. Here’s
+what a simple implementation of the open() context manager might
+look like:
+
+``` python
+class ManagedFile:
+    def __init__(self, name):
+        self.name = name
+    def __enter__(self):
+        self.file = open(self.name, 'w')
+        return self.file
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.file:
+            self.file.close()
+```
+
+Our ManagedFile class follows the context manager protocol and now
+supports the with statement, just like the original open() example
+did:
+
+``` python
+>>> withManagedFile('hello.txt') as f:
+...    f.write('hello, world!')
+...    f.write('bye now')
+```
+
+Python calls __enter__ when execution enters the context of the
+
+with statement and it’s time to acquire the resource. When execu-
+
+tion leaves the context again, Python calls __exit__ to free up the
+resource.
+
+Writing a class-based context manager isn’t the only way to support
+the with statement in Python. The contextlib7 utility module in the
+standard library provides a few more abstractions built on top of the
+basic context manager protocol. This can make your life a little easier
+if your use cases match what’s offered by contextlib.
+For example, you can use the contextlib.contextmanager decorator to define a generator-based factory function for a resource that will
+then automatically support the with statement. Here’s what rewriting
+our ManagedFile context manager example with this technique looks
+like:
+
+``` python
+from contextlib import contextmanager
+@contextmanager
+def managed_file(name):
+    try:
+        f = open(name, 'w')
+        yield f
+    finally:
+        f.close()
+>>> withmanaged_file('hello.txt') as f:
+...     f.write('hello, world!')
+...     f.write('bye now')
+```
+
+In this case, managed_file() is a generator that first acquires the
+resource. After that, it temporarily suspends its own execution and
+yields the resource so it can be used by the caller. When the caller
+leaves the with context, the generator continues to execute so that any
+remaining clean-up steps can occur and the resource can get released
+back to the system.
+The class-based implementation and the generator-based one are essentially equivalent. You might prefer one over the other, depending
+on which approach you find more readable.
+A downside of the @contextmanager-based implementation might be
+that it requires some understanding of advanced Python concepts like
+decorators and generators. If you need to get up to speed with those,
+feel free to take a detour to the relevant chapters here in this book.
+Once again, making the right implementation choice here comes
+down to what you and your team are comfortable using and what you
+find the most readable.
+
+<h5 dir='rt1'>Writing Pretty APIs With Context Managers</h5>
+
+Context managers are quite flexible, and if you use the with statement creatively, you can define convenient APIs for your modules and
+classes.
+For example, what if the “resource” we wanted to manage was text
+indentation levels in some kind of report generator program? What if
+we could write code like this to do it:
+```python
+with Indenter() as indent:
+    indent.print('hi!')
+    with indent:
+        indent.print('hello')
+        with indent:
+            indent.print('bonjour')
+    indent.print('hey')
+```
+
+This almost reads like a domain-specific language (DSL) for indenting text. Also, notice how this code enters and leaves the same context manager multiple times to change indentation levels. Running
+this code snippet should lead to the following output and print neatly
+formatted text to the console:
+
+hi!
+    hello
+        bonjour
+hey
+
+So, how would you implement a context manager to support this functionality?
+By the way, this could be a great exercise for you to understand exactly
+how context managers work. So before you check out my implementation below, you might want to take some time and try to implement
+this yourself as a learning exercise.
+If you’re ready to check out my implementation, here’s how you might
+implement this functionality using a class-based context manager:
+
+``` python
+class Indenter:
+    def __init__(self):
+        self.level = 0
+    def __enter__(self):
+        self.level += 1
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.level -= 1
+    def print(self, text):
+        print('    ' * self.level + text)
+```
+
+That wasn’t so bad, was it? I hope that by now you’re already feeling
+more comfortable using   in
+your own Python programs. They’re an excellent feature that will allow you to deal with resource management in a much more Pythonic
+and maintainable way.
+If you’re looking for another exercise to deepen your understanding,
+try implementing a context manager that measures the execution time
+of a code block using the time.time function. Be sure to try out writing both a decorator-based and a class-based variant to drive home
+the difference between the two.
+
+<h5 dir='rt1'>Key Takeaways</h5>
+
+   • The with statement simplifies exception handling by encapsulating standard uses of try/finally statements in so-called
+   context managers.
+   
+   • Most commonly it is used to manage the safe acquisition and
+   release of system resources. Resources are acquired by the
+   with statement and released automatically when execution
+   leaves the with context.
+   
+   • Using with effectively can help you avoid resource leaks and
+   make your code easier to read.
+
+
