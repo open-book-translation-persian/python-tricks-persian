@@ -265,7 +265,7 @@ A quick fix for that is to adopt a code style where you spread out list,
 dict, or set constants across multiple lines, like so:
 
 ``` python
->>>names=[
+>>> names = [
 ...'Alice',
 ...'Bob',
 ...'Dilbert'
@@ -285,3 +285,81 @@ consistent formatting.
 Let’s say you’d like to add another name (Jane) to that list. If you add
 Jane, you’ll need to fix the comma placement after the Dilbert line to
 avoid a nasty error:
+
+``` python
+>>> names = [...'Alice',
+...'Bob',
+...'Dilbert' # <- Missing comma!
+...'Jane']
+```
+
+When you inspect the contents of that list, brace yourself for a sur-prise:
+
+``` python
+>>> names 
+['Alice','Bob','DilbertJane']
+```
+
+As you can see, Python merged the strings Dilbert and Jane into DilbertJane. This so-called “string literal concatenation” is intentional
+and documented behavior. And it’s also a fantastic way to shoot yourself in the foot by introducing hard-to-catch bugs into your programs:
+
+     "Multiple adjacent string or bytes literals (delimited by
+      whitespace), possibly using different quoting conventions, are allowed, and their meaning is the same as
+      their concatenation.”
+      
+Still, string literal concatenation is a useful feature in some cases. For
+example, you can use it to reduce the number of backslashes needed
+to split long string constants across multiple lines:
+
+```python
+my_str = ('This is a super long string constant '
+'spread out across multiple lines. '
+'And look, no backslash characters needed!')
+```
+
+On the other hand, we’ve just seen how the same feature can quickly
+turn into a liability. Now, how do we fix this situation?
+Adding the missing comma after Dilbert prevents the two strings from
+getting merged into one:
+
+``` python
+>>> names = [...'Alice',
+...'Bob',
+...'Dilbert',
+...'Jane']
+```
+
+But now we’ve come full circle and returned to the original problem.
+I had to modify two lines in order to add a new name to the list. This
+makes it harder to see what was modified in the Git diff again… Did
+someone add a new name? Did someone change Dilbert’s name?
+Luckily, Python’s syntax allows for some leeway to solve this comma
+placement issue once and for all. You just need to train yourself to
+adopt a code style that avoids it in the first place. Let me show you
+how.
+In Python, you can place a comma after every item in a list, dict, or set
+constant, including the last item. That way, you can just remember
+to always end your lines with a comma and thus avoid the comma
+placement juggling that would otherwise be required.
+Here’s what the final example looks like:
+
+``` python
+>>>names=[...'Alice',
+...'Bob',
+...'Dilbert',
+... ]
+```
+
+Did you spot the comma after Dilbert? That’ll make it easy to add or
+remove new items without having to update the comma placement. It
+keeps your lines consistent, your source control diffs clean, and your
+code reviewers happy. Hey, sometimes the magic is in the little things,
+right?
+
+<h5 dir='rt1'>Key Takeaways</h5>
+
+    • Smart formatting and comma placement can make your list,
+    dict, or set constants easier to maintain.
+
+    • Python’s string literal concatenation feature can work to your
+    benefit, or introduce hard-to-catch bugs.
