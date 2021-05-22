@@ -596,10 +596,15 @@ underscore patterns and naming conventions, and how they affect the
 behavior of your Python programs:
 
    Single Leading Underscore: _var
+   
    Single Trailing Underscore: var_
+   
    Double Leading Underscore: __var
+   
    Double Leading and Trailing Underscore: __var__
+   
    Single Underscore: _
+   
    
 <h5 dir='rt1'>1. Single Leading Underscore: “_var”</h5>
 
@@ -988,11 +993,15 @@ interact with them without assigning them a name first:
 
    • Single Leading Underscore “_var”: Naming convention indicating a name is meant for internal use. Generally not enforced by the Python interpreter (except in    wildcard imports)
    and meant as a hint to the programmer only.
+   
    • Single Trailing Underscore “var_”: Used by convention to
    avoid naming conflicts with Python keywords.
+   
    • Double Leading Underscore “__var”: Triggers name mangling when used in a class context. Enforced by the Python interpreter.
+   
    • Double Leading and Trailing Underscore “__var__”: Indicates special methods defined by the Python language. Avoid
    this naming scheme for your own attributes.
+   
    • Single Underscore “_”: Sometimes used as a name for temporary or insignificant variables (“don’t care”). Also, it represents the result of the last      expression in a Python REPL session.
 
 
@@ -1267,8 +1276,10 @@ on the circumstances:
 
    • Perhaps surprisingly, there’s more than one way to handle
    string formatting in Python.
+   
    • Each method has its individual pros and cons. Your use case
    will influence which method you should use.
+   
    • If you’re having trouble deciding which string formatting
    method to use, try my String Formatting Rule of Thumb.
    
@@ -1290,21 +1301,40 @@ and run the following:
 <h5 dir='rt1'>The Zen of Python, by Tim Peters</h5>
 
 Beautiful is better than ugly.
+
 Explicit is better than implicit.
+
 Simple is better than complex.
+
 Complex is better than complicated.
+
 Flat is better than nested.
+
 Sparse is better than dense.
+
 Readability counts.
+
 Special cases aren’t special enough to break the rules.
+
 Although practicality beats purity.
+
 Errors should never pass silently.
+
 Unless explicitly silenced.
+
 In the face of ambiguity, refuse the temptation to guess.
+
 There should be one—and preferably only one—obvious way to do it.
+
 Although that way may not be obvious at first unless you’re Dutch.
+
 Now is better than never.
+
 Although never is often better than right now.
+
 If the implementation is hard to explain, it’s a bad idea.
+
 If the implementation is easy to explain, it may be a good idea.
+
 Namespaces are one honking great idea—let’s do more of those!
+
