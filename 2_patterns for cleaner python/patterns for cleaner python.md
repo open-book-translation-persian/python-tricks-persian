@@ -584,3 +584,315 @@ the difference between the two.
    make your code easier to read.
 
 
+<h3 dir='rt1'>2.4 Underscores, Dunders, and More</h3>
+
+Single and double underscores have a meaning in Python variable and
+method names. Some of that meaning is merely by convention and
+intended as a hint to the programmer—and some of it is enforced by
+the Python interpreter.
+If you’re wondering, “What’s the meaning of single and double underscores in Python variable and method names?” I’ll do my best to get
+you the answer here. In this chapter we’ll discuss the following five
+underscore patterns and naming conventions, and how they affect the
+behavior of your Python programs:
+
+   Single Leading Underscore: _var
+   Single Trailing Underscore: var_
+   Double Leading Underscore: __var
+   Double Leading and Trailing Underscore: __var__
+   Single Underscore: _
+   
+<h5 dir='rt1'>1. Single Leading Underscore: “_var”</h5>
+
+When it comes to variable and method names, the single underscore prefix has a meaning by convention only. It’s a hint to the
+programmer—it means what the Python community agrees it should
+mean, but it does not affect the behavior of your programs.
+The underscore prefix is meant as a hint to tell another programmer
+that a variable or method starting with a single underscore is intended
+for internal use. This convention is defined in PEP 8, the most commonly used Python code style guide.8
+However, this convention isn’t enforced by the Python interpreter.
+Python does not have strong distinctions between “private” and
+“public” variables like Java does. Adding a single underscore in front
+of a variable name is more like someone putting up a tiny underscore
+warning sign that says: “Hey, this isn’t really meant to be a part of the
+public interface of this class. Best to leave it alone.”
+
+Take a look at the following example:
+
+``` python
+class Test:
+    def __init__(self):
+        self.foo = 11
+        self._bar = 23
+```
+
+What’s going to happen if you instantiate this class and try to access
+the foo and _bar attributes defined in its __init__ constructor?
+
+Let’s find out:
+
+``` python
+>>> t=Test()
+>>>t.foo
+11
+>>>t._bar
+23
+```
+
+As you can see, the leading single underscore in _bar did not prevent
+us from “reaching into” the class and accessing the value of that variable.
+That’s because the single underscore prefix in Python is merely an
+agreed-upon convention—at least when it comes to variable and
+method names. However, leading underscores do impact how names
+get imported from modules. Imagine you had the following code in a
+module called my_module:
+
+``` python
+# my_module.py:
+
+def external_func():
+    return 23
+def _internal_func():
+    return 42
+```
+
+Now, if you use a wildcard import to import all the names from the
+module, Python will not import names with a leading underscore (unless the module defines an __all__ list that overrides this behavior9 ):
+
+``` python
+>>> from my_module import*
+>>>external_func()
+23
+>>_internal_func()
+NameError:"name '_internal_func' is not defined"
+```
+
+By the way, wildcard imports should be avoided as they make it unclear which names are present in the namespace. It’s better to stick
+to regular imports for the sake of clarity. Unlike wildcard imports, regular imports are not affected by the leading single underscore naming
+convention:
+
+``` python
+>>> import my_module
+>>> my_module.external_func()
+23
+>>> my_module._internal_func()
+42
+```
+
+I know this might be a little confusing at this point. If you stick to
+the PEP 8 recommendation that wildcard imports should be avoided,
+then all you really need to remember is this:
+Single underscores are a Python naming convention that indicates a
+name is meant for internal use. It is generally not enforced by the
+Python interpreter and is only meant as a hint to the programmer.
+
+<h5 dir='rt1'>2. Single Trailing Underscore: “var_”</h5>
+
+Sometimes the most fitting name for a variable is already taken by a
+keyword in the Python language. Therefore, names like class or def
+cannot be used as variable names in Python. In this case, you can
+append a single underscore to break the naming conflict:
+
+``` python
+>>> defmake_object(name,class):
+SyntaxError:"invalid syntax"
+>>> defmake_object(name, class_):
+...pass
+```
+
+In summary, a single trailing underscore (postfix) is used by convention to avoid naming conflicts with Python keywords. This convention
+is defined and explained in PEP 8.
+
+<h5 dir='rt1'>3. Double Leading Underscore: “__var”</h5>
+
+The naming patterns we’ve covered so far receive their meaning from
+agreed-upon conventions only. With Python class attributes (variables and methods) that start with double underscores, things are a
+little different.
+A double underscore prefix causes the Python interpreter to rewrite
+the attribute name in order to avoid naming conflicts in subclasses.
+This is also called name mangling—the interpreter changes the name
+of the variable in a way that makes it harder to create collisions when
+the class is extended later.
+I know this sounds rather abstract. That’s why I put together this little
+code example we can use for experimentation:
+
+```python
+class Test:
+    def __init__(self):
+        self.foo = 11
+        self._bar = 23
+        self.__baz = 23
+```
+
+Let’s take a look at the attributes on this object using the built-in dir()
+function:
+
+``` python
+>>> t = Test()
+>>> dir(t)
+['_Test__baz', '__class__', '__delattr__', '__dict__',
+'__dir__', '__doc__', '__eq__', '__format__', '__ge__',
+'__getattribute__', '__gt__', '__hash__', '__init__',
+'__le__', '__lt__', '__module__', '__ne__', '__new__',
+'__reduce__', '__reduce_ex__', '__repr__',
+'__setattr__', '__sizeof__', '__str__',
+'__subclasshook__', '__weakref__', '_bar', 'foo']
+```
+
+This gives us a list with the object’s attributes. Let’s take this list and
+look for our original variable names foo, _bar, and __baz. I promise
+you’ll notice some interesting changes.
+
+First of all, the self.foo variable appears unmodified as foo in the
+attribute list.
+
+Next up, self._bar behaves the same way—it shows up on the class
+as _bar. Like I said before, the leading underscore is just a convention
+in this case—a hint for the programmer.
+
+However, with self.__baz things look a little different. When you
+search for __baz in that list, you’ll see that there is no variable with
+that name.
+
+So what happened to __baz?
+
+If you look closely, you’ll see there’s an attribute called _Test__baz
+on this object. This is the name mangling that the Python interpreter
+applies. It does this to protect the variable from getting overridden in
+subclasses.
+
+Let’s create another class that extends the Test class and attempts to
+override its existing attributes added in the constructor:
+
+``` python
+class ExtendedTest(Test):
+    def __init__(self):
+        super().__init__()
+        self.foo = 'overridden'
+        self._bar = 'overridden'
+        self.__baz = 'overridden'
+```
+
+Now, what do you think the values of foo, _bar, and __baz will be on
+instances of this ExtendedTest class? Let’s take a look:
+
+``` python
+>>> t2 = ExtendedTest()
+>>> t2.foo
+'overridden'
+>>> t2._bar
+'overridden'
+>>> t2.__baz
+AttributeError:
+"'ExtendedTest' object has no attribute '__baz'"
+```
+
+Wait, why did we get that AttributeError when we tried to inspect
+the value of t2.__baz? Name mangling strikes again! It turns out
+this object doesn’t even have a __baz attribute:
+
+``` python
+>>> dir(t2)
+['_ExtendedTest__baz', '_Test__baz', '__class__',
+'__delattr__', '__dict__', '__dir__', '__doc__',
+'__eq__', '__format__', '__ge__', '__getattribute__',
+'__gt__', '__hash__', '__init__', '__le__', '__lt__',
+'__module__', '__ne__', '__new__', '__reduce__',
+'__reduce_ex__', '__repr__', '__setattr__',
+'__sizeof__', '__str__', '__subclasshook__',
+'__weakref__', '_bar', 'foo', 'get_vars']
+```
+
+As you can see, __baz got turned into _ExtendedTest__baz to prevent accidental modification. But the original _Test__baz is also still
+around:
+
+``` python
+>>> t2._ExtendedTest__baz
+'overridden'
+>>> t2._Test__baz
+42
+```
+
+Double underscore name mangling is fully transparent to the programmer. Take a look at the following example that will confirm
+this:
+
+``` python
+class ManglingTest:
+    def __init__(self):
+        self.__mangled = 'hello'
+    def get_mangled(self):
+        return self.__mangled
+        
+>>> ManglingTest().get_mangled()
+'hello'
+>>> ManglingTest().__mangled
+AttributeError:
+"'ManglingTest' object has no attribute '__mangled'"
+```
+
+Does name mangling also apply to method names? It sure does!
+Name mangling affects all names that start with two underscore
+characters (“dunders”) in a class context:
+
+``` python
+class MangledMethod:
+    def __method(self):
+        return 42
+    def call_it(self):
+        return self.__method()
+
+>>> MangledMethod().__method()
+AttributeError:
+"'MangledMethod' object has no attribute '__method'"
+>>> MangledMethod().call_it()
+42
+```
+
+Here’s another, perhaps surprising, example of name mangling in action:
+
+``` python
+_MangledGlobal__mangled = 23
+
+class MangledGlobal:
+    def test(self):
+        return __mangled
+>>> MangledGlobal().test()
+23
+```
+
+In this example, I declared _MangledGlobal__mangled as a global
+variable. Then I accessed the variable inside the context of a class
+named MangledGlobal. Because of name mangling, I was able to
+reference the _MangledGlobal__mangled global variable as just
+__mangled inside the test() method on the class.
+The Python interpreter automatically expanded the name __mangled
+to _MangledGlobal__mangled because it begins with two underscore
+characters. This demonstrates that name mangling isn’t tied to class
+attributes specifically. It applies to any name starting with two underscore characters that is used in a class context.
+Whew! That was a lot to absorb.
+To be honest with you, I didn’t write down these examples and explanations off the top of my head. It took me some research and editing
+to do it. I’ve been using Python for years but rules and special cases
+like that aren’t constantly on my mind.
+Sometimes the most important skills for a programmer are “pattern
+recognition” and knowing where to look things up. If you feel a little
+overwhelmed at this point, don’t worry. Take your time and play with
+some of the examples in this chapter.
+Let these concepts sink in enough so that you’ll recognize the general
+idea of name mangling and some of the other behaviors I’ve shown
+you. If you encounter them “in the wild” one day, you’ll know what to
+look for in the documentation.
+
+<h5 dir='rt1'>Sidebar: What are dunders?</h5>
+
+If you’ve heard some experienced Pythonistas talk about Python or
+watched a few conference talks you may have heard the term dunder.
+If you’re wondering what that is, well, here’s your answer:
+Double underscores are often referred to as “dunders” in the Python
+community. The reason is that double underscores appear quite often
+in Python code, and to avoid fatiguing their jaw muscles, Pythonistas
+often shorten “double underscore” to “dunder.”
+For example, you’d pronounce __baz as “dunder baz.” Likewise,
+__init__ would be pronounced as “dunder init,” even though one
+might think it should be “dunder init dunder.”
+But that’s just yet another quirk in the naming convention. It’s like a
+secret handshake for Python developers.
+
