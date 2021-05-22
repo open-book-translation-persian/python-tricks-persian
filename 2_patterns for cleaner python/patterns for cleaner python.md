@@ -174,11 +174,11 @@ with regular if-statements and raise validation exceptions if necessary, like so
 
 ``` python
 def delete_product(product_id, user):
-if not user.is_admin():
-raise AuthError('Must be admin to delete')
-if not store.has_product(product_id):
-raise ValueError('Unknown product id')
-store.get_product(product_id).delete()
+    if not user.is_admin():
+         raise AuthError('Must be admin to delete')
+    if not store.has_product(product_id):
+        raise ValueError('Unknown product id')
+    store.get_product(product_id).delete()
 ```
 
 This updated example also has the benefit that instead of raising unspecific AssertionError exceptions, it now raises semantically correct exceptions like ValueError or AuthError (which we’d have to
@@ -240,6 +240,8 @@ it has saved me hours upon hours of debugging.
 <h5 dir='rt1'>Key Takeaways</h5>
   
    • Python’s assert statement is a debugging aid that tests a condition as an internal self-check in your program.
+  
    • Asserts should only be used to help developers identify bugs.
    They’re not a mechanism for handling run-time errors.
+  
    • Asserts can be globally disabled with an interpreter setting.
