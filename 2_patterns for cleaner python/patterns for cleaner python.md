@@ -896,3 +896,415 @@ might think it should be “dunder init dunder.”
 But that’s just yet another quirk in the naming convention. It’s like a
 secret handshake for Python developers.
 
+<h5 dir='rt1'>4. Double Leading and Trailing Underscore: “__var__”</h5>
+
+Perhaps surprisingly, name mangling is not applied if a name starts
+and ends with double underscores. Variables surrounded by a double
+underscore prefix and postfix are left unscathed by the Python interpreter:
+
+``` python
+class PrefixPostfixTest:
+    def __init__(self):
+        self.__bam__ = 42
+        
+>>> PrefixPostfixTest().__bam__
+42
+```
+
+However, names that have both leading and trailing double underscores are reserved for special use in the language. This rule covers
+things like __init__ for object constructors, or __call__ to make objects callable.
+These dunder methods are often referred to as magic methods—but
+many people in the Python community, including myself, don’t like
+that word. It implies that the use of dunder methods is discouraged,
+which is entirely not the case. They’re a core feature in Python and
+should be used as needed. There’s nothing “magical” or arcane about
+them.
+However, as far as naming conventions go, it’s best to stay away from
+using names that start and end with double underscores in your own
+programs to avoid collisions with future changes to the Python language.
+
+<h5 dir='rt1'>5. Single Underscore: “_”</h5>
+
+Per convention, a single stand-alone underscore is sometimes used as
+a name to indicate that a variable is temporary or insignificant.
+For example, in the following loop we don’t need access to the running
+index and we can use “_” to indicate that it is just a temporary value:
+
+``` python
+>>> for_inrange(32):
+...     print('Hello, World.')
+```
+
+You can also use single underscores in unpacking expressions as a
+“don’t care” variable to ignore particular values. Again, this meaning
+is per convention only and it doesn’t trigger any special behaviors in
+the Python parser. The single underscore is simply a valid variable
+name that’s sometimes used for this purpose.
+In the following code example, I’m unpacking a tuple into separate
+variables but I’m only interested in the values for the color and
+mileage fields. However, in order for the unpacking expression to
+succeed, I need to assign all values contained in the tuple to variables.
+That’s where “_” is useful as a placeholder variable:
+
+``` python
+>>> car = ('red', 'auto', 12, 3812.4)
+>>> color, _, _, mileage = car
+>>> color
+'red'
+>>> mileage
+3812.4
+>>> _
+12
+```
+
+Besides its use as a temporary variable, “_” is a special variable in most
+Python REPLs that represents the result of the last expression evaluated by the interpreter.
+This is handy if you’re working in an interpreter session and you’d like
+to access the result of a previous calculation:
+
+``` python
+>>> 20 + 3
+23
+>>> _
+23
+>>> print(_)
+23
+```
+
+It’s also handy if you’re constructing objects on the fly and want to
+interact with them without assigning them a name first:
+
+``` python
+>>> list()
+[]
+>>> _.append(1)
+>>> _.append(2)
+>>> _.append(3)
+>>> _
+[1, 2, 3]
+```
+
+<h5 dir='rt1'>Key Takeaways</h5>
+
+   • Single Leading Underscore “_var”: Naming convention indicating a name is meant for internal use. Generally not enforced by the Python interpreter (except in    wildcard imports)
+   and meant as a hint to the programmer only.
+   • Single Trailing Underscore “var_”: Used by convention to
+   avoid naming conflicts with Python keywords.
+   • Double Leading Underscore “__var”: Triggers name mangling when used in a class context. Enforced by the Python interpreter.
+   • Double Leading and Trailing Underscore “__var__”: Indicates special methods defined by the Python language. Avoid
+   this naming scheme for your own attributes.
+   • Single Underscore “_”: Sometimes used as a name for temporary or insignificant variables (“don’t care”). Also, it represents the result of the last      expression in a Python REPL session.
+
+
+<h3 dir='rt1'>2.5 A Shocking Truth About String</h3>
+
+Remember the Zen of Python and how there should be “one obvious
+way to do something?” You might scratch your head when you find
+out that there are four major ways to do string formatting in Python.
+In this chapter I’ll demonstrate how these four string formatting approaches work and what their respective strengths and weaknesses
+are. I’ll also give you my simple “rule of thumb” for how I pick the
+best general-purpose string formatting approach.
+Let’s jump right in, as we’ve got a lot to cover. In order to have a simple
+toy example for experimentation, let’s assume we’ve got the following
+variables (or constants, really) to work with:
+
+``` python
+>>> errno = 50159747054
+>>> name = 'Bob'
+```
+
+And based on these variables we’d like to generate an output string
+with the following error message:
+
+``` python
+'Hey Bob, there is a 0xbadc0ffee error!'
+```
+
+Now, that error could really spoil a dev’s Monday morning! But we’re
+here to discuss string formatting today. So let’s get to work.
+
+<h5 dir='rt1'>#1 – “Old Style” String Formatting</h5>
+
+Strings in Python have a unique built-in operation that can be
+accessed with the %-operator. It’s a shortcut that lets you do simple
+positional formatting very easily. If you’ve ever worked with a
+printf-style function in C, you’ll instantly recognize how this works.
+Here’s a simple example:
+
+``` python
+>>> 'Hello, %s' % name
+'Hello, Bob'
+```
+
+I’m using the %s format specifier here to tell Python where to substitute the value of name, represented as a string. This is called “old style”
+string formatting.
+In old style string formatting there are also other format specifiers
+available that let you control the output string. For example, it’s possible to convert numbers to hexadecimal notation or to add whitespace
+padding to generate nicely formatted tables and reports.11
+Here, I’m using the %x format specifier to convert an int value to a
+string and to represent it as a hexadecimal number:
+
+``` python
+>>> '%x' % errno
+'badc0ffee'
+```
+
+The “old style” string formatting syntax changes slightly if you want to
+make multiple substitutions in a single string. Because the %-operator
+only takes one argument, you need to wrap the right-hand side in a
+tuple, like so:
+
+``` python
+>>> 'Hey %s, there is a 0x%x error!' % (name, errno)
+'Hey Bob, there is a 0xbadc0ffee error!'
+```
+
+It’s also possible to refer to variable substitutions by name in your
+format string, if you pass a mapping to the %-operator:
+
+``` python
+>>> 'Hey%(name)s, there is a 0x%(errno)xerror!'%{
+...    "name": name,"errno": errno }
+'Hey Bob, there is a 0xbadc0ffee error!'
+```
+
+This makes your format strings easier to maintain and easier to modify
+in the future. You don’t have to worry about making sure the order
+you’re passing in the values matches up with the order the values are
+referenced in the format string. Of course, the downside is that this
+technique requires a little more typing.
+I’m sure you’ve been wondering why this printf-style formatting is
+called “old style” string formatting. Well, let me tell you. It was technically superseded by “new style” formatting, which we’re going to
+talk about in a minute. But while “old style” formatting has been deemphasized, it hasn’t been deprecated. It is still supported in the latest versions of Python.
+
+<h5 dir='rt1'>#2 – “New Style” String Formatting</h5>
+
+Python 3 introduced a new way to do string formatting that was also
+later back-ported to Python 2.7. This “new style” string formatting
+gets rid of the %-operator special syntax and makes the syntax for
+string formatting more regular. Formatting is now handled by calling a format() function on a string object.12
+You can use the format() function to do simple positional formatting,
+just like you could with “old style” formatting:
+
+``` python
+>>> 'Hello, {}'.format(name)
+'Hello, Bob'
+```
+
+Or, you can refer to your variable substitutions by name and use them
+in any order you want. This is quite a powerful feature as it allows
+for re-arranging the order of display without changing the arguments
+passed to the format function:
+
+``` python
+>>> 'Hey {name}, there is a 0x{errno:x} error!'.format(
+...    name=name, errno=errno)
+'Hey Bob, there is a 0xbadc0ffee error!'
+```
+
+This also shows that the syntax to format an int variable as a hexadecimal string has changed. Now we need to pass a format spec by adding
+a “:x” suffix after the variable name.
+Overall, the format string syntax has become more powerful without
+complicating the simpler use cases. It pays off to read up on this string
+formatting mini-language in the Python documentation.13
+In Python 3, this “new style” string formatting is preferred over %-style
+formatting. However, starting with Python 3.6 there’s an even better
+way to format your strings. I’ll tell you all about it in the next section.
+
+<h5 dir='rt1'>#3 – Literal String Interpolation (Python 3.6+)</h5>
+
+Python 3.6 adds yet another way to format strings, called Formatted
+String Literals. This new way of formatting strings lets you use embedded Python expressions inside string constants. Here’s a simple
+example to give you a feel for the feature:
+
+``` python
+>>> f'Hello, {name}!'
+'Hello, Bob!'
+```
+
+This new formatting syntax is powerful. Because you can embed arbitrary Python expressions, you can even do inline arithmetic with it,
+like this:
+``` python
+>>> a = 5
+>>> b = 10
+>>> f'Five plus ten is {a + b} and not {2 * (a + b)}.'
+
+'Five plus ten is 15 and not 30.'
+```
+
+Behind the scenes, formatted string literals are a Python parser feature that converts f-strings into a series of string constants and expressions. They then get joined up to build the final string.
+
+Imagine we had the following greet() function that contains an fstring:
+
+``` python
+>>> def greet(name, question):
+...    return f"Hello, {name}! How's it {question}?"
+...
+
+>>> greet('Bob', 'going')
+"Hello, Bob! How's it going?"
+```
+
+When we disassemble the function and inspect what’s going on behind the scenes, we can see that the f-string in the function gets transformed into something similar to the following:
+
+``` python
+>>> def greet(name, question):
+...    return ("Hello, " + name + "! How's it " +
+            question + "?")
+```
+
+The real implementation is slightly faster than that because it uses the
+BUILD_STRING opcode as an optimization.14 But functionally they’re
+the same:
+
+``` python
+>>> import dis
+>>> dis.dis(greet)
+  2    0 LOAD_CONST     1 ('Hello, ')
+       2 LOAD_FAST      0 (name)
+       4 FORMAT_VALUE   0
+       6 LOAD_CONST     2 ("! How's it ")
+       8 LOAD_FAST      1 (question)
+       10 FORMAT_VALUE  0
+       12 LOAD_CONST    3 ('?')
+       14 BUILD_STRING  5
+       16 RETURN_VALUE
+```
+
+String literals also support the existing format string syntax of the
+str.format() method. That allows you to solve the same formatting
+problems we’ve discussed in the previous two sections:
+
+``` python
+>>> f"Hey {name}, there's a {errno:#x} error!"
+"Hey Bob, there's a 0xbadc0ffee error!"
+```
+
+Python’s new Formatted String Literals are similar to the JavaScript
+Template Literals added in ES2015. I think they’re quite a nice addition to the language, and I’ve already started using them in my dayto-day Python 3 work. You can learn more about Formatted String
+Literals in the official Python documentation.
+
+<h5 dir='rt1'>#4 – Template Strings</h5>
+
+One more technique for string formatting in Python is Template
+Strings. It’s a simpler and less powerful mechanism, but in some
+cases this might be exactly what you’re looking for.
+Let’s take a look at a simple greeting example:
+
+``` python
+>>> from string import Template
+>>> t = Template('Hey, $name!')
+>>> t.substitute(name=name)
+'Hey, Bob!'
+```
+
+You see here that we need to import the Template class from Python’s
+built-in string module. Template strings are not a core language feature but they’re supplied by a module in the standard library.
+Another difference is that template strings don’t allow format specifiers. So in order to get our error string example to work, we need to
+transform our int error number into a hex-string ourselves:
+
+``` python
+>>> templ_string = 'Hey $name, there is a $error error!'
+>>> Template(templ_string).substitute(
+...    name=name, error=hex(errno))
+'Hey Bob, there is a 0xbadc0ffee error!'
+```
+
+That worked great but you’re probably wondering when you use template strings in your Python programs. In my opinion, the best use
+case for template strings is when you’re handling format strings generated by users of your program. Due to their reduced complexity,
+template strings are a safer choice.
+The more complex formatting mini-languages of other string formatting techniques might introduce security vulnerabilities to your programs. For example, it’s possible for format strings to access arbitrary
+variables in your program.
+That means, if a malicious user can supply a format string they can
+also potentially leak secret keys and other sensible information!
+Here’s a simple proof of concept of how this attack might be used:
+
+``` python
+>>> SECRET = 'this-is-a-secret'
+>>> class Error:
+...    def __init__(self):
+           pass
+>>> err = Error()
+>>> user_input = '{error.__init__.__globals__[SECRET]}'
+
+# Uh-oh...
+>>> user_input.format(error=err)
+'this-is-a-secret'
+```
+
+See how the hypothetical attacker was able to extract our secret string
+by accessing the __globals__ dictionary from the format string?
+Scary, huh! Template Strings close this attack vector, and this makes
+them a safer choice if you’re handling format strings generated from
+user input:
+
+``` python
+>>> user_input = '${error.__init__.__globals__[SECRET]}'
+>>> Template(user_input).substitute(error=err)
+ValueError:
+"Invalid placeholder in string: line 1, col 1"
+```
+
+<h5 dir='rt1'>Which String Formatting Method Should I Use?</h5>
+
+I totally get that having so much choice for how to format your strings
+in Python can feel very confusing. This would be a good time to bust
+out some flowchart infographic…
+But I’m not going to do that. Instead, I’ll try to boil it down to the
+simple rule of thumb that I apply when I’m writing Python.
+Here we go—you can use this rule of thumb any time you’re having
+difficulty deciding which string formatting method to use, depending
+on the circumstances:
+
+<h6 dir='rt1'>Dan’s Python String Formatting Rule of Thumb:</h6>
+
+    If your format strings are user-supplied, use Template
+    Strings to avoid security issues. Otherwise, use Literal
+    String Interpolation if you’re on Python 3.6+, and “New
+    Style” String Formatting if you’re not.
+
+<h5 dir='rt1'>Key Takeaways</h5>
+
+   • Perhaps surprisingly, there’s more than one way to handle
+   string formatting in Python.
+   • Each method has its individual pros and cons. Your use case
+   will influence which method you should use.
+   • If you’re having trouble deciding which string formatting
+   method to use, try my String Formatting Rule of Thumb.
+   
+   
+<h3 dir='rt1'>2.6 “The Zen of Python” Easter Egg</h3>
+
+I know what follows is a common sight as far as Python books go. But
+there’s really no way around Tim Peters’ Zen of Python. I’ve benefited
+from revisiting it over the years, and I think Tim’s words made me a
+better coder. Hopefully they can do the same for you.
+Also, you can tell the Zen of Python is a big deal because it’s included as
+an Easter egg in the language. Just enter a Python interpreter session
+and run the following:
+
+``` python
+>>> import this
+```
+
+<h5 dir='rt1'>The Zen of Python, by Tim Peters</h5>
+
+Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+Complex is better than complicated.
+Flat is better than nested.
+Sparse is better than dense.
+Readability counts.
+Special cases aren’t special enough to break the rules.
+Although practicality beats purity.
+Errors should never pass silently.
+Unless explicitly silenced.
+In the face of ambiguity, refuse the temptation to guess.
+There should be one—and preferably only one—obvious way to do it.
+Although that way may not be obvious at first unless you’re Dutch.
+Now is better than never.
+Although never is often better than right now.
+If the implementation is hard to explain, it’s a bad idea.
+If the implementation is easy to explain, it may be a good idea.
+Namespaces are one honking great idea—let’s do more of those!
