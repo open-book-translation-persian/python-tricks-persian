@@ -244,3 +244,44 @@ it has saved me hours upon hours of debugging.
    They’re not a mechanism for handling run-time errors.
   
    • Asserts can be globally disabled with an interpreter setting.
+
+
+<h3 dir='rt1'>2.2 Complacent Comma Placement</h3>
+
+Here’s a handy tip for when you’re adding and removing items from
+a list, dict, or set constant in Python: Just end all of your lines with a
+comma.
+Not sure what I’m talking about? Let me give you a quick example.
+Imagine you’ve got this list of names in your code:
+
+``` python
+>>> names = ['Alice', 'Bob', 'Dilbert']
+```
+
+Whenever you make a change to this list of names, it’ll be hard to tell
+what was modified by looking at a Git diff, for example. Most source
+control systems are line-based and have a hard time highlighting multiple changes to a single line.
+A quick fix for that is to adopt a code style where you spread out list,
+dict, or set constants across multiple lines, like so:
+
+``` python
+>>>names=[
+...'Alice',
+...'Bob',
+...'Dilbert'
+... ]
+```
+
+That way there’s one item per line, making it perfectly clear which one
+was added, removed, or modified when you view a diff in your source
+control system. It’s a small change but I found it helped me avoid silly
+mistakes. It also made it easier for my teammates to review my code
+changes.
+Now, there are two editing cases that can still cause some confusion.
+Whenever you add a new item at the end of a list, or you remove the
+last item, you’ll have to update the comma placement manually to get
+consistent formatting.
+
+Let’s say you’d like to add another name (Jane) to that list. If you add
+Jane, you’ll need to fix the comma placement after the Dilbert line to
+avoid a nasty error:
