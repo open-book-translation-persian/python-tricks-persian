@@ -1,6 +1,5 @@
 
-<h1 dir="rtl">Patterns for Cleaner Python</h1>
-<div dir='rt1'>
+<h1>Patterns for Cleaner Python</h1>
   
 <h3 dir='rt1'>2.1 Covering Your A** With Assertions</h3>
   
