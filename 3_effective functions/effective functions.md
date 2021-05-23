@@ -220,8 +220,8 @@ In practical terms, this means not only can functions return behaviors but they 
 
 ``` python
 def make_adder(n):
-def add(x):
-return x + n
+    def add(x):
+        return x + n
 return add
 
 >>> plus_3 = make_adder(3)
