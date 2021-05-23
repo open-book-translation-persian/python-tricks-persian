@@ -586,8 +586,9 @@ If you try to apply one of these decorators to a function that takes ar- guments
 This is where Python’s *args and **kwargs feature3 for dealing with variable numbers of arguments comes in handy. The following proxy decorator takes advantage of that:
 
 ``` python
- def proxy(func):
-def wrapper(*args, **kwargs): return func(*args, **kwargs)
+def proxy(func):
+    def wrapper(*args, **kwargs): 
+        return func(*args, **kwargs)
 return wrapper
 ```
  
